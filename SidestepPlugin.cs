@@ -31,15 +31,15 @@ using TreeSharp;
 
 namespace Sidestep
 {
-    
-	public class Sidestep : BotPlugin
-	{
-        
+
+    public class Sidestep : BotPlugin
+    {
+
         public override string Author => "ZZI";
-	    public override Version Version => new Version(3, 0);
-	    public override string Name => "SideStep";
-	    public override bool WantButton => true;
-	    private bool on = false;
+        public override Version Version => new Version(3, 0);
+        public override string Name => "SideStep";
+        public override bool WantButton => true;
+        private bool on = false;
 
         // public override void OnButtonPress()
         // {
@@ -58,18 +58,18 @@ namespace Sidestep
             LoadAvoidanceObjects();
         }
         public override void OnEnabled()
-	    {
-	        Logger.Verbose("Sidestep has been Enabled");
+        {
+            Logger.Verbose("Sidestep has been Enabled");
 
-	        TreeHooks.Instance.OnHooksCleared += rehookavoid;
+            TreeHooks.Instance.OnHooksCleared += rehookavoid;
             rehookavoid(null, null);
-	    }
-	    public override void OnDisabled()
-	    {
-	        Logger.Verbose("Sidestep has been Disabled");
-            if(s_hook != null)
-	            TreeHooks.Instance.RemoveHook("TreeStart", s_hook);
-	        TreeHooks.Instance.OnHooksCleared -= rehookavoid;
+        }
+        public override void OnDisabled()
+        {
+            Logger.Verbose("Sidestep has been Disabled");
+            if (s_hook != null)
+                TreeHooks.Instance.RemoveHook("TreeStart", s_hook);
+            TreeHooks.Instance.OnHooksCleared -= rehookavoid;
         }
 
         private static ActionRunCoroutine s_hook;
@@ -80,7 +80,7 @@ namespace Sidestep
             {
                 var supportsCapabilities = RoutineManager.Current.SupportedCapabilities != CapabilityFlags.None;
 
-                if(AvoidanceManager.IsRunningOutOfAvoid && Core.Me.IsCasting)
+                if (AvoidanceManager.IsRunningOutOfAvoid && Core.Me.IsCasting)
                 {
                     ActionManager.StopCasting();
                     return true;
@@ -109,10 +109,15 @@ namespace Sidestep
             });
 
             TreeHooks.Instance.InsertHook("TreeStart", 0, s_hook);
-	    }
+        }
 
 
-	    private Dictionary<ulong, IAvoider> _owners = new Dictionary<ulong, IAvoider>();
+        private Dictionary<ulong, IAvoider> _owners = new Dictionary<ulong, IAvoider>();
+
+        static private HashSet<ulong> _blacklist = new HashSet<ulong>{
+            //       Location         Battle Character        Spell name       Notes
+            11291 // HoH floor 30          Hiruko               Shiko          Proximity based, avoider will try to add a circle of range 100 which covers the whole field
+        };
 
 	    private void LoadAvoidanceObjects()
 	    {
@@ -203,7 +208,7 @@ namespace Sidestep
             //if (!c.StatusFlags.HasFlag(StatusFlags.Hostile))
             //    return false;
 
-            if (c.CastingSpellId == 0)
+            if (c.CastingSpellId == 0 || _blacklist.Contains(c.CastingSpellId))
                 return false;
 
 
